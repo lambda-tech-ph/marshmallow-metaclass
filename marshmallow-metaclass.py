@@ -48,35 +48,71 @@ class Meta(type):
         return new_class
 
 
-class KardeshevBeing(metaclass=Meta):
-    level = fields.Int()
+if __name__ == '__main__':
+    class KardeshevBeing(metaclass=Meta):
+        level = fields.Int()
 
+    class Alien(KardeshevBeing):
+        planet = fields.Str()
 
-class Alien(KardeshevBeing):
-    planet = fields.Str()
+    class Human(Alien):
+        name = fields.Str()
+        email = fields.Email()
 
+    class Singer(Human):
+        album = fields.Str()
 
-class Human(Alien):
-    name = fields.Str()
-    email = fields.Email()
+    lady = Singer(name='Lady Gaga', email='lady@gmail.com',
+                  planet='Venus', album='Chromatica', level=1)
+    print(lady.asdict())
+    # {'email': 'lady@gmail.com', 'name': 'Lady Gaga', 'level': 1, 'album': 'Chromatica', 'planet': 'Venus'}
+    print(f'{lady.name} is from {lady.planet}')
+    # Lady Gaga is from Venus
 
+    nicki = Singer(name='Nicki Minaj')
+    print(nicki.email)
+    # None
+    print(nicki.asdict())
+    # {'name': 'Nicki Minaj', 'album': None, 'email': None, 'level': None, 'planet': None}
 
-class Singer(Human):
-    album = fields.Str()
+    # taylor = Singer(foo='bar')
+    # marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
 
+    # taylor = Singer(email='gmail.com')
+    # marshmallow.exceptions.ValidationError: {'email': ['Not a valid email address.']}
 
-lady = Singer(name='Lady Gaga', email='lady@gmail.com',
-              planet='Venus', album='Chromatica', level=1)
-print(lady.asdict())
-# {'email': 'lady@gmail.com', 'name': 'Lady Gaga', 'level': 1, 'album': 'Chromatica', 'planet': 'Venus'}
-print(f'{lady.name} is from {lady.planet}')
-# Lady Gaga is from Venus
+    class Person(metaclass=Meta):
+        name = fields.Str()
+        email = fields.Email()
 
-nicki = Singer(name='Nicki Minaj')
-print(nicki.email)
-# None
-print(nicki.asdict())
-# {'name': 'Nicki Minaj', 'album': None, 'email': None, 'level': None, 'planet': None}
+    class Album(metaclass=Meta):
+        songs = fields.List(fields.Str())
+        singer = fields.Nested(Human.SCHEMA)
+        name = fields.Str()
 
-taylor = Singer(foo='Foo')
-# marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
+    lady = Person(name='Lady Gaga', email='lady@gmail.com')
+    album = Album(
+        name='Chromatica',
+        singer=lady.data,
+        songs=[
+            '911',
+            'Rain On Me',
+            'Free Woman',
+            'Enigma',
+            'Stupid Love'
+        ]
+    )
+    print(album.asdict())
+    # {
+    #     'songs': [
+    #         '911',
+    #         'Rain On Me',
+    #         'Free Woman',
+    #         'Enigma',
+    #         'Stupid Love'
+    #     ],
+    #     'singer': {
+    #         'name': 'Lady Gaga'
+    #     },
+    #     'name': 'Chromatica'
+    # }

@@ -52,8 +52,6 @@ class Meta(type):
             return dictionary
 
         # add attributes
-        new_class.__init__ = __init__
-        new_class.asdict = asdict
         new_class.SCHEMA = SCHEMA
         new_class.FIELDS = FIELDS
 

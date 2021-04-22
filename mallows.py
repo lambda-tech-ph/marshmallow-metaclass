@@ -31,26 +31,6 @@ class Meta(type):
         # create schema
         SCHEMA = Schema.from_dict(FIELDS)()
 
-        def __init__(self, **kwargs):
-            """Custom __init__ method."""
-            # desirialize
-            self.data = self.SCHEMA.load(kwargs)
-
-            # set attributes
-            for key, val in self.data.items():
-                setattr(self, key, val)
-            for field in self.FIELDS.keys():
-                if not field in self.data.keys():
-                    setattr(self, field, None)
-
-        def asdict(self):
-            """Return dictionary."""
-            dictionary = self.data
-            for field in self.FIELDS.keys():
-                if not field in self.data.keys():
-                    dictionary[field] = None
-            return dictionary
-
         # add attributes
         new_class.SCHEMA = SCHEMA
         new_class.FIELDS = FIELDS

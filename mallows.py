@@ -17,7 +17,7 @@ class Meta(type):
 
     def __new__(cls, name, bases, attrs):
         """Custom __new__ method."""
-        new_class = super().__new__(cls, name, bases, attrs)
+        new_class = super().__new__(cls, name, bases+(MetaMethods,), attrs)
 
         # get all marshmallow field attributes
         FIELDS = dict()

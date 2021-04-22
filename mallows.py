@@ -4,8 +4,6 @@ from marshmallow import Schema, fields
 class Meta(type):
     """The meta class.
     The new class will have these attributes:
-    - `__init__` method
-    - `asdict` method
     - `SCHEMA`
         > This is generated even if the class isn't instantiated.
         > If you want a nested object, you will always use this

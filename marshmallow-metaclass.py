@@ -117,3 +117,15 @@ if __name__ == '__main__':
     #     },
     #     'name': 'Chromatica'
     # }
+
+    class MyString(fields.Str):
+        pass
+
+    class User(metaclass=Meta):
+        name = MyString()
+
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+
+    cardi = User(name='Cardi B')
+    print(cardi.asdict())

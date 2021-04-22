@@ -12,9 +12,10 @@ class Meta(type):
         FIELDS = dict()
         for field_name in dir(new_class):
             field = getattr(new_class, field_name)
-            if hasattr(field, '__module__') \
-                    and field.__module__ == 'marshmallow.fields':
-                FIELDS[field_name] = field
+            for base in field.__class__.__mro__:
+                if hasattr(base, '__module__') \
+                        and base.__module__ == 'marshmallow.fields':
+                    FIELDS[field_name] = field
 
         # create schema
         SCHEMA = Schema.from_dict(FIELDS)()

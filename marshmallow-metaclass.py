@@ -2,7 +2,18 @@ from marshmallow import Schema, fields
 
 
 class Meta(type):
-    """The meta class."""
+    """The meta class.
+    The new class will have these attributes:
+    - `__init__` method
+    - `asdict` method
+    - `SCHEMA`
+        > This is generated even if the class isn't instantiated.
+        > If you want a nested object, you will always use this
+          like, `Class.SCHEMA`.
+    - `FIELDS`
+        > This is a dictionary of all marshmallow fields inside
+          the class.
+    """
 
     def __new__(cls, name, bases, attrs):
         """Custom __new__ method."""

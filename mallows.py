@@ -46,9 +46,10 @@ class Meta(type):
             if isinstance(value, Field)
         }
 
-        if not MetaMethods in bases:
-            bases += (MetaMethods,)
+        # Create a new class that inherits from `MetaMethods`.
         new_class = super().__new__(cls, name, bases, attrs)
+        if not MetaMethods in new_class.__mro__:
+            new_class = super().__new__(cls, name, bases+(MetaMethods,), attrs)
 
         # Walk through the MRO.
         declared_fields = {}

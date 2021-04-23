@@ -46,6 +46,8 @@ class Meta(type):
             if isinstance(value, Field)
         }
 
+        if not MetaMethods in bases:
+            bases += (MetaMethods,)
         new_class = super().__new__(cls, name, bases, attrs)
 
         # Walk through the MRO.

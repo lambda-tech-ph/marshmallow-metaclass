@@ -1,4 +1,5 @@
 from marshmallow import Schema
+from marshmallow.fields import Field
 
 
 class MetaMethods:
@@ -44,12 +45,10 @@ class Meta(type):
 
         # get all marshmallow field attributes
         FIELDS = dict()
-        for field_name in dir(new_class):
-            field = getattr(new_class, field_name)
-            for base in field.__class__.__mro__:
-                if hasattr(base, '__module__') \
-                        and base.__module__ == 'marshmallow.fields':
-                    FIELDS[field_name] = field
+        for attr_name in dir(new_class):
+            obj = getattr(new_class, attr_name)
+            if isinstance(obj, Field):
+                FIELDS[attr_name] = obj
 
         # create schema
         SCHEMA = Schema.from_dict(FIELDS)()

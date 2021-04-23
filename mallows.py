@@ -40,21 +40,28 @@ class Meta(type):
     """
 
     def __new__(cls, name, bases, attrs):
-        """Custom __new__ method."""
-        new_class = super().__new__(cls, name, bases+(MetaMethods,), attrs)
+        # Collect fields from current class and remove them from attrs.
+        attrs['declared_fields'] = {
+            key: attrs.pop(key) for key, value in list(attrs.items())
+            if isinstance(value, Field)
+        }
 
-        # get all marshmallow field attributes
-        FIELDS = dict()
-        for attr_name in dir(new_class):
-            obj = getattr(new_class, attr_name)
-            if isinstance(obj, Field):
-                FIELDS[attr_name] = obj
+        new_class = super().__new__(cls, name, bases, attrs)
 
-        # create schema
-        SCHEMA = Schema.from_dict(FIELDS)()
+        # Walk through the MRO.
+        declared_fields = {}
+        for base in reversed(new_class.__mro__):
+            # Collect fields from base class.
+            if hasattr(base, 'declared_fields'):
+                declared_fields.update(base.declared_fields)
+
+            # Field shadowing.
+            for attr, value in base.__dict__.items():
+                if value is None and attr in declared_fields:
+                    declared_fields.pop(attr)
 
         # add attributes
-        new_class.SCHEMA = SCHEMA
-        new_class.FIELDS = FIELDS
+        new_class.SCHEMA = Schema.from_dict(declared_fields)()
+        new_class.FIELDS = declared_fields
 
         return new_class

@@ -51,12 +51,25 @@ class DeclarativeFields(metaclass=Meta):
         """Custom __init__ method."""
         # desirialize
         self.data = self.SCHEMA.load(kwargs)
-        # set attributes
-        for key, val in self.data.items():
-            setattr(self, key, val)
-        for field in self.FIELDS.keys():
-            if not field in self.data.keys():
-                setattr(self, field, None)
+
+    def __getattr__(self, attr):
+        """Get value of field."""
+        try:
+            field = self.FIELDS[attr]
+        except KeyError:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' has no attribute '{attr}'")
+
+        return field.get_value(self.asdict(), attr)
+
+    def __getitem__(self, attr):
+        try:
+            field = self.FIELDS[attr]
+        except KeyError:
+            raise KeyError(
+                f"'{self.__class__.__name__}' has no attribute '{attr}'")
+
+        return field.get_value(self.asdict(), attr)
 
     def asdict(self):
         """Return a dictionary version of the object."""

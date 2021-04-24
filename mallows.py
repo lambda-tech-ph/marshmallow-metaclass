@@ -2,7 +2,47 @@ from marshmallow import Schema
 from marshmallow.fields import Field
 
 
-class MetaMethods:
+class Meta(type):
+    """The meta class.
+    The new class will have these attributes:
+    - `SCHEMA`
+        > This is generated even if the class isn't instantiated.
+        > If you want a nested object, you will always use this
+          like, `Class.SCHEMA`.
+    - `FIELDS`
+        > This is a dictionary of all marshmallow fields inside
+          the class.
+    """
+
+    def __new__(cls, name, bases, attrs):
+        # Collect fields from current class and remove them from attrs.
+        attrs['declared_fields'] = {
+            key: attrs.pop(key) for key, value in list(attrs.items())
+            if isinstance(value, Field)
+        }
+
+        new_class = super().__new__(cls, name, bases, attrs)
+
+        # Walk through the MRO.
+        declared_fields = {}
+        for base in reversed(new_class.__mro__):
+            # Collect fields from base class.
+            if hasattr(base, 'declared_fields'):
+                declared_fields.update(base.declared_fields)
+
+            # Field shadowing.
+            for attr, value in base.__dict__.items():
+                if value is None and attr in declared_fields:
+                    declared_fields.pop(attr)
+
+        # add attributes
+        new_class.SCHEMA = Schema.from_dict(declared_fields)()
+        new_class.FIELDS = declared_fields
+
+        return new_class
+
+
+class DeclarativeFields(metaclass=Meta):
     """Separate class for the methods.
     `Meta` will make new classes inherit from this.
     """
@@ -25,46 +65,3 @@ class MetaMethods:
             if not field in self.data.keys():
                 dictionary[field] = None
         return dictionary
-
-
-class Meta(type):
-    """The meta class.
-    The new class will have these attributes:
-    - `SCHEMA`
-        > This is generated even if the class isn't instantiated.
-        > If you want a nested object, you will always use this
-          like, `Class.SCHEMA`.
-    - `FIELDS`
-        > This is a dictionary of all marshmallow fields inside
-          the class.
-    """
-
-    def __new__(cls, name, bases, attrs):
-        # Collect fields from current class and remove them from attrs.
-        attrs['declared_fields'] = {
-            key: attrs.pop(key) for key, value in list(attrs.items())
-            if isinstance(value, Field)
-        }
-
-        # Create a new class that inherits from `MetaMethods`.
-        new_class = super().__new__(cls, name, bases, attrs)
-        if not MetaMethods in new_class.__mro__:
-            new_class = super().__new__(cls, name, bases+(MetaMethods,), attrs)
-
-        # Walk through the MRO.
-        declared_fields = {}
-        for base in reversed(new_class.__mro__):
-            # Collect fields from base class.
-            if hasattr(base, 'declared_fields'):
-                declared_fields.update(base.declared_fields)
-
-            # Field shadowing.
-            for attr, value in base.__dict__.items():
-                if value is None and attr in declared_fields:
-                    declared_fields.pop(attr)
-
-        # add attributes
-        new_class.SCHEMA = Schema.from_dict(declared_fields)()
-        new_class.FIELDS = declared_fields
-
-        return new_class
